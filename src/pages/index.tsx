@@ -2,13 +2,21 @@ import { useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlassLocation } from '@fortawesome/free-solid-svg-icons';
 
+//Type inline weather data to define it
+type WeatherData = {
+    city:string;
+    temperature:number;
+    description:string;
+    humidity:number;
+    wind_speed:number;
+};
 
 export default function Home(){
-    const [city, setCity] = useState('');
-    const [weather, setWeather] = useState(null);
-    const [error, setError] = useState('');
+    const [city, setCity] = useState<string>(''); // explicitly typed string
+    const [weather, setWeather] = useState<WeatherData | null>(null);
+    const [error, setError] = useState<string>('');
 
-    const fetchWeatherData = async (e) => {
+    const fetchWeatherData = async (e: { preventDefault: () => void; }) => { // Inferred parameter types from usage to avoid parameters having an 'any' type
         e.preventDefault();
         setError('');
         setWeather(null);
@@ -24,7 +32,7 @@ export default function Home(){
         // }
 
         try{
-            const apiKey = '29f2960907afaf556a470c20ccb90c55';
+            const apiKey = process.env.NEXT_PUBLIC_WEATHER_API_KEY;
             const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
 
             if (!res.ok) throw new Error('Failed to fetch data.');
@@ -39,7 +47,8 @@ export default function Home(){
             };
 
             setWeather(weatherData);
-        }catch (err){
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        }catch (err:any){
             setError(err.message);
         }
     };
