@@ -10,6 +10,8 @@ type WeatherData = {
     humidity:number;
     wind_speed:number;
     timezone: number; // Displayed in seconds from UTC
+    sunrise: number;
+    sunset:number;
 };
 
 export default function Home(){
@@ -39,13 +41,15 @@ export default function Home(){
             if (!res.ok) throw new Error('Failed to fetch data.');
             const data = await res.json();
 
-            const weatherData = {
+            const weatherData:WeatherData = {
                 city: data.name,
                 temperature: data.main.temp,
                 description: data.weather[0].description,
                 humidity: data.main.humidity,
                 wind_speed: data.wind.speed,
                 timezone: data.timezone,
+                sunrise: data.sys.sunrise,
+                sunset: data.sys.sunset,
             };
 
             setWeather(weatherData);
@@ -64,20 +68,38 @@ export default function Home(){
         else if (weather.description.includes('cloud')) baseClass = 'clouds';
         else if (weather.description.includes('clear')) baseClass = 'clear';
 
+        // Time transitions through day and night based on classified day time and night time
         // Get current UTC time
-        const nowUTC = new Date().getTime(); // milliseconds
+        // const nowUTC = new Date().getTime(); // milliseconds
 
-        // Apply city's timezone offset
-        // API provides time in seconds so convert from milliseconds to seconds
-        const localTime = new Date(nowUTC + weather.timezone * 1000);
+        // // Apply city's timezone offset
+        // // API provides time in seconds so convert from milliseconds to seconds
+        // const localTime = new Date(nowUTC + weather.timezone * 1000);
 
-        // Extract local hour (0-23)
-        const hour = localTime.getUTCHours();  // Use UTC hours as its been adjusted for local time
+        // // Extract local hour (0-23)
+        // const hour = localTime.getUTCHours();  // Use UTC hours as its been adjusted for local time
 
-        // Classify as day or night (Typical daytime 6AM - 6PM)
-        const timeClass = hour >= 6 && hour < 18 ? 'day' : 'night';
+        // // Classify as day or night (Typical daytime 6AM - 6PM)
+        // const timeClass = hour >= 6 && hour < 18 ? 'day' : 'night';
 
-        return `${baseClass} ${timeClass}`
+        // return `${baseClass} ${timeClass}`
+
+        // Time Transition through Sunrise and Sunset
+        // Current UTC timestamp in seconds
+        const nowUTCSeconds = Math.floor(Date.now() / 1000);
+
+        // Adjust to local time by adding time offset
+        const localTimeStamp = nowUTCSeconds + weather.timezone;
+
+        // Compare sunrise and sunset
+        const localSunrise = weather.sunrise + weather.timezone;
+        const localSunset = weather.sunset + weather.timezone;
+
+        // Determine day and night
+        const isDay =  localTimeStamp >= localSunrise && localTimeStamp < localSunset;
+        const timeClass = isDay ? 'day' : 'night';
+
+        return `${baseClass} ${timeClass}`;
     }
 
     return (
