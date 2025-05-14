@@ -17,7 +17,7 @@
     background: linear-gradient(to top, #d3d3d3, #a9a9a9);
 }
 
-/* Rain Animation */
+/* Rain Effect */
 .weather-container.rain::before {
     content: "";
     position: absolute;
@@ -25,11 +25,15 @@
     height: 100%;
     background-image: url('https://i.ibb.co/4F0h7fs/rain.gif');
     background-size: cover;
-    opacity: 0.4;
-    pointer-events: none;
+    opacity: 0.4; /* Light overlay */
+    pointer-events: none; /* Allow interactions below effect */
 }
 
-/* Snow Animation */
+.weather-container.rain.night::before {
+    opacity: 0.6; /* Slightly more visible at night */
+}
+
+/* Snow Effect */
 .weather-container.snow::before {
     content: "";
     position: absolute;
@@ -37,6 +41,39 @@
     height: 100%;
     background-image: url('https://i.ibb.co/LZfPnBN/snow.gif');
     background-size: cover;
-    opacity: 0.5;
+    opacity: 0.5; /* Moderate visibility */
     pointer-events: none;
 }
+
+.weather-container.snow.night::before {
+    opacity: 0.6; /* Enhance visibility during night */
+}
+
+/* Adjust brightness or apply night tones */
+.weather-container.day{
+    filter: brightness(1); /* Normal day lighting / brightness */
+}
+
+.weather-container.night{
+    background-color: #0d1b2a; /* Deep blue for night tone */
+    filter: brightness(0.7); /* Dimmed brightness */
+}
+
+/* Clear Weather */
+.weather-container.clear.day {
+    background: linear-gradient(to top, #87ceeb, #ffffff); /* Blue sky */
+}
+
+.weather-container.clear.night {
+    background: linear-gradient(to top, #0d1b2a, #1b263b); /* Deep night sky gradient */
+}
+
+/* Cloudy weather */
+.weather-container.clouds {
+    background: linear-gradient(to top, #d3d3d3, #a9a9a9); /* Gray clouds */
+}
+
+.weather-container.clouds.night {
+    background: linear-gradient(to top, #4a4a4a, #2f2f2f); /* Darker cloudy night */
+}
+

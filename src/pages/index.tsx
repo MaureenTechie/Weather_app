@@ -9,6 +9,7 @@ type WeatherData = {
     description:string;
     humidity:number;
     wind_speed:number;
+    timezone: number; // Displayed in seconds from UTC
 };
 
 export default function Home(){
@@ -44,6 +45,7 @@ export default function Home(){
                 description: data.weather[0].description,
                 humidity: data.main.humidity,
                 wind_speed: data.wind.speed,
+                timezone: data.timezone,
             };
 
             setWeather(weatherData);
@@ -55,11 +57,27 @@ export default function Home(){
 
     const getWeatherClass = () => {
         if (!weather) return 'default';
-        if (weather.description.includes('rain')) return 'rain';
-        if (weather.description.includes('snow')) return 'snow';
-        if (weather.description.includes('cloud')) return 'clouds';
-        if (weather.description.includes('clear')) return 'clear';
-        return 'default';
+
+        let baseClass = 'default';
+        if (weather.description.includes('rain')) baseClass = 'rain';
+        else if (weather.description.includes('snow')) baseClass = 'snow';
+        else if (weather.description.includes('cloud')) baseClass = 'clouds';
+        else if (weather.description.includes('clear')) baseClass = 'clear';
+
+        // Get current UTC time
+        const nowUTC = new Date().getTime(); // milliseconds
+
+        // Apply city's timezone offset
+        // API provides time in seconds so convert from milliseconds to seconds
+        const localTime = new Date(nowUTC + weather.timezone * 1000);
+
+        // Extract local hour (0-23)
+        const hour = localTime.getUTCHours();  // Use UTC hours as its been adjusted for local time
+
+        // Classify as day or night (Typical daytime 6AM - 6PM)
+        const timeClass = hour >= 6 && hour < 18 ? 'day' : 'night';
+
+        return `${baseClass} ${timeClass}`
     }
 
     return (
