@@ -53,33 +53,44 @@ export default function Home(){
         }
     };
 
+    const getWeatherClass = () => {
+        if (!weather) return 'default';
+        if (weather.description.includes('rain')) return 'rain';
+        if (weather.description.includes('snow')) return 'snow';
+        if (weather.description.includes('cloud')) return 'clouds';
+        if (weather.description.includes('clear')) return 'clear';
+        return 'default';
+    }
+
     return (
-        <div style={{padding: '2rem', fontFamily:'Arial'}}>
-            <h1>Weather App</h1>
-            <form onSubmit={fetchWeatherData} style={{display: 'flex',alignItems: 'center'}}>
-                <FontAwesomeIcon icon={faMagnifyingGlassLocation} style={{marginRight: '0.5rem'}}/>
-                <input
-                type="text"
-                placeholder="Search city"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                required
-                style={{padding: '0.5rem', marginRight:'1rem'}}
-                />
-                <button type="submit" style={{padding: '0.5rem'}}>Get Weather</button>
-            </form>
+        <div className={`weather-container ${getWeatherClass()}`}>
+            <div style={{ padding: '2rem', fontFamily: 'Arial', position: 'relative', zIndex: 1 }}>
+                <h1>Weather App</h1>
+                <form onSubmit={fetchWeatherData} style={{ display: 'flex', alignItems: 'center' }}>
+                    <FontAwesomeIcon icon={faMagnifyingGlassLocation} style={{ marginRight: '0.5rem' }} />
+                    <input
+                        type="text"
+                        placeholder="Search city"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        required
+                        style={{ padding: '0.5rem', marginRight: '1rem' }}
+                    />
+                    <button type="submit" style={{ padding: '0.5rem' }}>Get Weather</button>
+                </form>
 
-            {error && <p style={{color: 'red'}}>{error}</p>}
+                {error && <p style={{ color: 'red' }}>{error}</p>}
 
-            {weather && (
-                <div style={{marginTop: '2rem'}}>
-                    <h2>Weather in {weather.city}</h2>
-                    <p>Temperature: {weather.temperature} °C </p>
-                    <p>Description: {weather.description}</p>
-                    <p>Humidity: {weather.humidity} %</p>
-                    <p>Wind Speed: {weather.wind_speed} m/s</p>
-                </div>
-            )}
+                {weather && (
+                    <div style={{ marginTop: '2rem' }}>
+                        <h2>Weather in {weather.city}</h2>
+                        <p>Temperature: {weather.temperature} °C </p>
+                        <p>Description: {weather.description}</p>
+                        <p>Humidity: {weather.humidity} %</p>
+                        <p>Wind Speed: {weather.wind_speed} m/s</p>
+                    </div>
+                )}
+            </div>
         </div>
-    )
+    );
 }

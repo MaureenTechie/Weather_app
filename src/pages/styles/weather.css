@@ -1,0 +1,42 @@
+.weather-container {
+    height: 100vh;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    background-color: #b0c4de;
+    transition: background 0.5s ease;
+}
+
+/* Default Clear Weather */
+.weather-container.clear {
+    background: linear-gradient(to top, #87ceeb, #ffffff);
+}
+
+/* Cloudy */
+.weather-container.clouds {
+    background: linear-gradient(to top, #d3d3d3, #a9a9a9);
+}
+
+/* Rain Animation */
+.weather-container.rain::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://i.ibb.co/4F0h7fs/rain.gif');
+    background-size: cover;
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* Snow Animation */
+.weather-container.snow::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-image: url('https://i.ibb.co/LZfPnBN/snow.gif');
+    background-size: cover;
+    opacity: 0.5;
+    pointer-events: none;
+}
