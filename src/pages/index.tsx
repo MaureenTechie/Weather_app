@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlassLocation } from '@fortawesome/free-solid-svg-icons';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { timeStamp } from "console";
 
 //Type inline weather data to define it
 type WeatherData = {
@@ -59,6 +61,16 @@ export default function Home(){
         }
     };
 
+    // Format time to HH:MM AM/PM
+    const formatLocalTime = (timestamp: number): string => {
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+        });
+    };
+
     const getWeatherClass = () => {
         if (!weather) return 'default';
 
@@ -100,6 +112,8 @@ export default function Home(){
         const timeClass = isDay ? 'day' : 'night';
 
         return `${baseClass} ${timeClass}`;
+
+
     }
 
     return (
@@ -128,6 +142,18 @@ export default function Home(){
                         <p>Description: {weather.description}</p>
                         <p>Humidity: {weather.humidity} %</p>
                         <p>Wind Speed: {weather.wind_speed} m/s</p>
+
+                        <hr style={{margin: '1rem 0'}}/>
+
+                        <p>
+                            <strong>Local Time:</strong> {formatLocalTime(Math.floor(Date.now() / 1000))}
+                        </p>
+                        <p>
+                            <strong>Sunrise:</strong> {formatLocalTime(weather.sunrise)}
+                        </p>
+                        <p>
+                            <strong>Sunset:</strong> {formatLocalTime(weather.sunset)}
+                        </p>
                     </div>
                 )}
             </div>
