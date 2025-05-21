@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlassLocation } from '@fortawesome/free-solid-svg-icons';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { timeStamp } from "console";
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { permission } from "process";
 
 //Type inline weather data to define it
@@ -51,6 +52,7 @@ export default function Home(){
         // Persist settings
         localStorage.setItem('notifyEnabled', String(notifyEnabled));
         localStorage.setItem('notifyTime', notifyTime);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [notifyEnabled, notifyTime, weather]);
 
     // Schedule the next daily notification
