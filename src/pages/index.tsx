@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlassLocation } from '@fortawesome/free-solid-svg-icons';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { timeStamp } from "console";
+import { permission } from "process";
 
 //Type inline weather data to define it
 type WeatherData = {
@@ -20,6 +21,64 @@ export default function Home(){
     const [city, setCity] = useState<string>(''); // explicitly typed string
     const [weather, setWeather] = useState<WeatherData | null>(null);
     const [error, setError] = useState<string>('');
+
+    // Notification settings
+    const [notifyEnabled, setNotifyEnabled] = useState<boolean>(() => {
+        if (typeof window !== 'undefined'){
+            return localStorage.getItem('notifyEnabled') === 'true';
+        }
+        return false;
+    })
+
+    const [notifyTime, setNotifyTime] = useState<string>(() => {
+        return typeof window !== 'undefined'
+        ? localStorage.getItem('notifyTime') || '08:00'
+        : '08:00';
+    })
+
+    // Request permission from user & schedule when toggled on or time the weather changes
+    useEffect(() => {
+        if (!notifyEnabled) return;
+
+        if (Notification.permission !== 'granted'){
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') scheduleDaily();
+            });
+        }else{
+            scheduleDaily();
+        }
+
+        // Persist settings
+        localStorage.setItem('notifyEnabled', String(notifyEnabled));
+        localStorage.setItem('notifyTime', notifyTime);
+    }, [notifyEnabled, notifyTime, weather]);
+
+    // Schedule the next daily notification
+    const scheduleDaily = () => {
+        if (!notifyEnabled) return;
+
+        const now = new Date();
+        const [hour, minute] = notifyTime.split(':').map(Number);
+        const next = new Date();
+        next.setHours(hour, minute, 0, 0);
+        if (next <= now) next.setDate(next.getDate() + 1);
+
+        const timeout = next.getTime() - now.getTime();
+        setTimeout(() => {
+            sendNotification();
+            scheduleDaily(); // schedule next
+        }, timeout);
+    };
+
+    // Send weather notification
+    const sendNotification = () => {
+        if (!weather) return;
+        const title = `Weather in ${weather.city}`;
+        const options ={
+            body: `${weather.description}, ${weather.temperature} \u00B0C, Humidity${weather.humidity}%`,
+        };
+        new Notification(title, options);
+    }
 
     const fetchWeatherData = async (e: { preventDefault: () => void; }) => { // Inferred parameter types from usage to avoid parameters having an 'any' type
         e.preventDefault();
@@ -80,12 +139,13 @@ export default function Home(){
     });
 
     // Safe check for typeof window
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const prefersDark = 
     typeof window !== 'undefined' &&
     window.matchMedia &&
     window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-
+    // Apply theme class
     const getWeatherClass = () => {
         if (theme === 'light') return 'theme-light';
         if (theme === 'dark') return 'theme-dark';
@@ -98,22 +158,6 @@ export default function Home(){
         else if (weather.description.includes('snow')) base = 'snow';
         else if (weather.description.includes('cloud')) base = 'clouds';
         else if (weather.description.includes('clear')) base = 'clear';
-
-        // Time transitions through day and night based on classified day time and night time
-        // Get current UTC time
-        // const nowUTC = new Date().getTime(); // milliseconds
-
-        // // Apply city's timezone offset
-        // // API provides time in seconds so convert from milliseconds to seconds
-        // const localTime = new Date(nowUTC + weather.timezone * 1000);
-
-        // // Extract local hour (0-23)
-        // const hour = localTime.getUTCHours();  // Use UTC hours as its been adjusted for local time
-
-        // // Classify as day or night (Typical daytime 6AM - 6PM)
-        // const timeClass = hour >= 6 && hour < 18 ? 'day' : 'night';
-
-        // return `${baseClass} ${timeClass}`
 
         // Time Transition through Sunrise and Sunset
         // Current UTC timestamp in seconds
@@ -131,17 +175,6 @@ export default function Home(){
         const timeClass = isDay ? 'day' : 'night';
 
         return `${base} ${timeClass}`;
-
-      
-        useEffect(() => {
-            if (typeof window!== 'undefined'){
-                localStorage.setItem('theme', theme);
-            }
-        }, [theme]);
-
-        
-
-
     }
 
     return (
@@ -161,6 +194,31 @@ export default function Home(){
                     <button type="submit" style={{ padding: '0.5rem' }}>Get Weather</button>
                 </form>
 
+                {/* {Notification Settings} */}
+                <div style={{marginTop: '1rem'}}>
+                    <label>
+                        <input
+                        type="checkbox"
+                        checked={notifyEnabled}
+                        onChange={(e) => setNotifyEnabled(e.target.checked)}
+                        style={{marginRight: '0.5rem'}}
+                        />
+                        Enable daily weather notifications
+                    </label>
+                    {notifyEnabled && (
+                        <div style={{marginTop: '0.5rem'}}>
+                            <label>
+                                Notify at:
+                                <input
+                                type="time"
+                                value={notifyTime}
+                                onChange={(e) => setNotifyTime(e.target.value)}
+                                style={{marginLeft: '0.5rem'}}
+                                />                  
+                            </label>
+                        </div>
+                    )}
+                </div>
                 {error && <p style={{ color: 'red' }}>{error}</p>}
 
                 {weather && (
