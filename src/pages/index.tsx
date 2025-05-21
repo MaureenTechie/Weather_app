@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlassLocation } from '@fortawesome/free-solid-svg-icons';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -71,14 +71,33 @@ export default function Home(){
         });
     };
 
-    const getWeatherClass = () => {
-        if (!weather) return 'default';
+    // Theme Selector
+    const [theme, setTheme] = useState<string>(() => {
+        if (typeof window !== 'undefined'){
+            return localStorage.getItem('theme') || 'auto';
+        }
+        return 'auto';
+    });
 
-        let baseClass = 'default';
-        if (weather.description.includes('rain')) baseClass = 'rain';
-        else if (weather.description.includes('snow')) baseClass = 'snow';
-        else if (weather.description.includes('cloud')) baseClass = 'clouds';
-        else if (weather.description.includes('clear')) baseClass = 'clear';
+    // Safe check for typeof window
+    const prefersDark = 
+    typeof window !== 'undefined' &&
+    window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+
+    const getWeatherClass = () => {
+        if (theme === 'light') return 'theme-light';
+        if (theme === 'dark') return 'theme-dark';
+
+        // Auto Theme Logic based on time and weather
+        if (!weather) return 'theme-default';
+
+        let base = 'default';
+        if (weather.description.includes('rain')) base = 'rain';
+        else if (weather.description.includes('snow')) base = 'snow';
+        else if (weather.description.includes('cloud')) base = 'clouds';
+        else if (weather.description.includes('clear')) base = 'clear';
 
         // Time transitions through day and night based on classified day time and night time
         // Get current UTC time
@@ -111,7 +130,16 @@ export default function Home(){
         const isDay =  localTimeStamp >= localSunrise && localTimeStamp < localSunset;
         const timeClass = isDay ? 'day' : 'night';
 
-        return `${baseClass} ${timeClass}`;
+        return `${base} ${timeClass}`;
+
+      
+        useEffect(() => {
+            if (typeof window!== 'undefined'){
+                localStorage.setItem('theme', theme);
+            }
+        }, [theme]);
+
+        
 
 
     }
@@ -156,6 +184,15 @@ export default function Home(){
                         </p>
                     </div>
                 )}
+
+                <div style={{margin: '1 rem 0'}}>
+                    <label htmlFor="theme-select"><strong>Theme:</strong></label>
+                    <select id="theme-select" value={theme} onChange={(e) => setTheme(e.target.value)} style={{marginLeft: '0.5rem', padding: '0.25rem'}}>
+                        <option value="auto">Auto(Weather/Time)</option>
+                        <option value="light">Light</option>
+                        <option value = "dark">Dark</option>
+                    </select>
+                </div>
             </div>
         </div>
     );

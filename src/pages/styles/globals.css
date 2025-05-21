@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Theme CSS */
+.theme-light {
+    background-color: #f9f9f9;
+    color: #222;
+}
+
+.theme-dark {
+    background-color: #121212;
+    color: #f9f9f9;
+  }
+  
+  .clear.day {
+    background: linear-gradient(to top, #87cefa, #f0f8ff);
+  }
+  
+  .clear.night {
+    background: linear-gradient(to top, #0d1b2a, #1b263b);
+    color: white;
+  }
+  
+  .rain.day, .rain.night {
+    background: url('/rain.gif') repeat;
+    color: white;
+  }
+  
+  .snow.day, .snow.night {
+    background: url('/snow.gif') repeat;
+    color: black;
+  }
