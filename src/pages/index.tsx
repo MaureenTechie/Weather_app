@@ -87,7 +87,7 @@ export default function Home(){
 
         const timeout = next.getTime() - now.getTime();
         setTimeout(() => {
-            sendwindowNotification();
+            sendNotification();
             scheduleDaily(); // schedule next
         }, timeout);
     };
@@ -195,6 +195,7 @@ export default function Home(){
         }, 60_000); // run every minute
 
         return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [weather]); // re-create timer if weather changes
 
     // Safe check for typeof window
@@ -313,7 +314,9 @@ export default function Home(){
                 {isDisaster && (
                     <div style={{marginTop: '1.5rem', padding: '1rem', border: '2px solid red', borderRadius: '8px'}}>
                         <h3 style={{color: 'red'}}>Disaster Alert</h3>
-                        <p>{weather.description} detected in your area</p>
+                        {weather && weather.description && (
+                             <p>{weather.description} detected in your area</p>
+                        )}
                         <button onClick={reportToPolice} style={{marginRight: '1rem', padding: '0.5rem'}}>Report to Nearest Police Station</button>
                         <button onClick={findSafePlaces} style={{padding: '0.5rem'}}>View Safe Places</button>
 
