@@ -18,10 +18,20 @@ type WeatherData = {
     sunset:number;
 };
 
+type Station = { name: string; address:string; distance: number};
+type RescuePlace = {name: string, description: string; distance: number};
+
 export default function Home(){
     const [city, setCity] = useState<string>(''); // explicitly typed string
     const [weather, setWeather] = useState<WeatherData | null>(null);
     const [error, setError] = useState<string>('');
+
+    // Introduce isMounted lag to render a consistent SSR stub
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, [])
 
     // Notification settings
     const [notifyEnabled, setNotifyEnabled] = useState<boolean>(() => {
@@ -36,6 +46,16 @@ export default function Home(){
         ? localStorage.getItem('notifyTime') || '08:00'
         : '08:00';
     })
+
+    // Disaster support
+    const [policeStations, setPoliceStations] = useState<Station[] | null>(null);
+    const [rescuePlaces, setRescuePlaces] = useState<RescuePlace[] | null>(null);
+
+    // Indicators of disasters
+    const disasterKeywords = ['storm', 'flood', 'tornado', 'earthquake', 'hurricane', 'wildfire'];
+    const isDisaster = weather
+    ? disasterKeywords.some(kw => weather.description.toLowerCase().includes(kw))
+    : false;
 
     // Request permission from user & schedule when toggled on or time the weather changes
     useEffect(() => {
@@ -67,7 +87,7 @@ export default function Home(){
 
         const timeout = next.getTime() - now.getTime();
         setTimeout(() => {
-            sendNotification();
+            sendwindowNotification();
             scheduleDaily(); // schedule next
         }, timeout);
     };
@@ -116,10 +136,34 @@ export default function Home(){
             };
 
             setWeather(weatherData);
+
+            // Clear any previous data depending on location
+            setPoliceStations(null);
+            setRescuePlaces(null);
+
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         }catch (err:any){
             setError(err.message);
         }
+    };
+
+    // Report and help functions
+    const reportToPolice = () => {
+        navigator.geolocation.getCurrentPosition(async pos => {
+            const { latitude, longitude} = pos.coords;
+            const res = await fetch(`/api/safe-places?lat=${latitude}&lng=${longitude}`);
+            const places: RescuePlace[] = await res.json();
+            setRescuePlaces(places);
+        })
+    }
+
+    const findSafePlaces = () => {
+        navigator.geolocation.getCurrentPosition(async pos => {
+            const { latitude, longitude } = pos.coords;
+            const res = await fetch(`/api/police-stations?lat=${latitude}&lng=${longitude}`);
+            const stations: Station[] = await res.json();
+            setPoliceStations(stations);
+        });
     };
 
     // Format time to HH:MM AM/PM
@@ -139,6 +183,19 @@ export default function Home(){
         }
         return 'auto';
     });
+
+    const [localTime, setLocalTime] = useState<string>('...');
+    const [ themeClass, setThemeClass ] = useState<string>('theme-default');
+
+    useEffect(() => {
+        // Update every minute or so if you want a live clock:
+        const timer = setInterval(() => {
+            setLocalTime(formatLocalTime(Math.floor(Date.now() / 1000)));
+            setThemeClass(getWeatherClass());
+        }, 60_000); // run every minute
+
+        return () => clearInterval(timer);
+    }, [weather]); // re-create timer if weather changes
 
     // Safe check for typeof window
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -180,7 +237,14 @@ export default function Home(){
     }
 
     return (
-        <div className={`weather-container ${getWeatherClass()}`}>
+        <div className={`weather-container ${isMounted ? getWeatherClass() : 'theme-default'}`} suppressHydrationWarning={true}>
+            {isMounted && weather && (
+                <div style={{marginTop: '2rem'}}>
+                    {/* {Now formatLocalTime() only runs client-side} */}
+                    <p suppressHydrationWarning={true}><strong>Local Time:</strong>{localTime}</p>
+                    <div className={`weather-container ${themeClass}`}></div>
+                </div>
+            )}
             <div style={{ padding: '2rem', fontFamily: 'Arial', position: 'relative', zIndex: 1 }}>
                 <h1>Weather App</h1>
                 <form onSubmit={fetchWeatherData} style={{ display: 'flex', alignItems: 'center' }}>
@@ -208,7 +272,7 @@ export default function Home(){
                         Enable daily weather notifications
                     </label>
                     {notifyEnabled && (
-                        <div style={{marginTop: '0.5rem'}}>
+                        <div style={{marginTop:"0.5rem"}}>
                             <label>
                                 Notify at:
                                 <input
@@ -231,9 +295,9 @@ export default function Home(){
                         <p>Humidity: {weather.humidity} %</p>
                         <p>Wind Speed: {weather.wind_speed} m/s</p>
 
-                        <hr style={{margin: '1rem 0'}}/>
+                        <hr style={{margin: '1rem0'}}/>
 
-                        <p>
+                        <p suppressHydrationWarning={true}>
                             <strong>Local Time:</strong> {formatLocalTime(Math.floor(Date.now() / 1000))}
                         </p>
                         <p>
@@ -242,6 +306,38 @@ export default function Home(){
                         <p>
                             <strong>Sunset:</strong> {formatLocalTime(weather.sunset)}
                         </p>
+                    </div>
+                )}
+
+                {/* {Disaster Reporting} */}
+                {isDisaster && (
+                    <div style={{marginTop: '1.5rem', padding: '1rem', border: '2px solid red', borderRadius: '8px'}}>
+                        <h3 style={{color: 'red'}}>Disaster Alert</h3>
+                        <p>{weather.description} detected in your area</p>
+                        <button onClick={reportToPolice} style={{marginRight: '1rem', padding: '0.5rem'}}>Report to Nearest Police Station</button>
+                        <button onClick={findSafePlaces} style={{padding: '0.5rem'}}>View Safe Places</button>
+
+                        {policeStations && (
+                            <div style={{marginTop: '1rem'}}>
+                                <h4>Nearest Police Stations:</h4>
+                                <ul>
+                                    {policeStations.map((s,i) => (
+                                        <li key={i}>{s.name} - {s.distance}km away ({s.address})</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {rescuePlaces && (
+                            <div style={{marginTop: '1rem'}}>
+                                <h4>Recommended Safe Places:</h4>
+                                <ul>
+                                    {rescuePlaces.map((p, i) => (
+                                        <li key={i}>{p.name} - {p.distance}km away({p.description})</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -256,4 +352,4 @@ export default function Home(){
             </div>
         </div>
     );
-}
+};
