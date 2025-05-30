@@ -273,7 +273,7 @@ export default function Home(){
                         Enable daily weather notifications
                     </label>
                     {notifyEnabled && (
-                        <div style={{marginTop:"0.5rem"}}>
+                        <div suppressHydrationWarning={true} style={{marginTop: "0.5rem"}}>
                             <label>
                                 Notify at:
                                 <input
